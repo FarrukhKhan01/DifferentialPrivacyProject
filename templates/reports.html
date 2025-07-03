@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Comparison</title>
+    <link rel="stylesheet" href="/static/css/consumer.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 20px; background: #f9fafb; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .tabs { display: flex; margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; }
+        .tab { padding: 1rem 2rem; background: #e5e7eb; border: none; cursor: pointer; font-weight: 500; }
+        .tab.active { background: #2563eb; color: white; }
+        .form-section { background: white; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #374151; }
+        input, select { width: 100%; padding: 0.75rem; border: 1px solid #d1d5db; border-radius: 0.375rem; margin-bottom: 1rem; }
+        .help-text { font-size: 0.875rem; color: #6b7280; margin-top: -0.5rem; margin-bottom: 1rem; }
+        .btn { padding: 0.75rem 1.5rem; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500; }
+        .btn-primary { background: #14b8a6; color: white; }
+        .btn-primary:hover { background: #0d9488; }
+        .btn-secondary { background: #6b7280; color: white; }
+        .btn-full { width: 100%; }
+        .mt-6 { margin-top: 1.5rem; }
+        .error { background: #fef2f2; color: #dc2626; padding: 1rem; border-radius: 0.375rem; margin: 1rem 0; }
+        .results { background: white; padding: 1.5rem; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        
+        /* Confusion Matrix Styles */
+        .confusion-matrix-container { margin: 1rem 0; }
+        .confusion-matrix-table { 
+            border-collapse: collapse; 
+            width: 100%; 
+            margin: 1rem 0; 
+        }
+        .confusion-matrix-table th, 
+        .confusion-matrix-table td { 
+            border: 1px solid #d1d5db; 
+            padding: 0.5rem; 
+            text-align: center; 
+        }
+        .confusion-matrix-table th { 
+            background: #f3f4f6; 
+            font-weight: 600; 
+        }
+        .confusion-matrix-table .header { 
+            background: #f3f4f6; 
+            font-weight: 600; 
+        }
+        .confusion-matrix-table .correct { 
+            background: #dcfce7; 
+        }
+        .confusion-matrix-table .incorrect { 
+            background: #fef2f2; 
+        }
+        .attribute-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        .attribute-checkbox {
+            display: flex;
+            align-items: center;
+            background: #f3f4f6;
+            border-radius: 0.375rem;
+            padding: 0.5rem 0.75rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+        .attribute-checkbox input[type="checkbox"] {
+            margin-right: 0.5rem;
+        }
+        .selected-attributes {
+            margin-bottom: 1rem;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div style="display:flex; gap:1rem; margin-bottom:2rem;">
+            <button id="modelTab" class="tab-btn" style="padding:0.5rem 1rem; background:#6b7280; color:#fff; border:none; border-radius:4px;">Model Robustness</button>
+            <button id="consumerTab" class="tab-btn" style="padding:0.5rem 1rem; background:#2563eb; color:#fff; border:none; border-radius:4px;">Data Consumer</button>
+        </div>
+        <div id="modelSection">
+            <h1 style="font-size:2rem; font-weight:bold; margin-bottom:1.5rem;">Model Robustness Analysis</h1>
+            <p style="color:#666; margin-bottom:1.5rem;">Test how well your model trained on clean data performs when the test data has differential privacy noise. This shows model robustness to privacy-preserving data perturbations.</p>
+            <form id="modelForm" autocomplete="off">
+                <label for="datasetSelect">Dataset</label>
+                <select id="datasetSelect" required><option value="">Loading...</option></select>
+
+                <label for="targetSelect">Target Column</label>
+                <select id="targetSelect" required disabled><option value="">Select dataset first</option></select>
+
+                <label for="epsilonInput">Epsilon Values (comma-separated)</label>
+                <input id="epsilonInput" type="text" value="0.1,0.5,1.0" required>
+
+                <label for="testSizeInput">Test Size (%)</label>
+                <input id="testSizeInput" type="number" min="10" max="50" value="20" required>
+
+                <button type="submit" id="runBtn">Run Robustness Analysis</button>
+                <div class="error" id="errorMsg" style="display:none;"></div>
+            </form>
+            <div class="results" id="results" style="display:none;">
+                <h2 style="font-size:1.25rem; font-weight:600; margin-top:2rem;">Results</h2>
+                <div id="summary"></div>
+                <canvas id="chart" style="max-width:100%; margin:2rem 0;"></canvas>
+                <div id="table"></div>
+                <div id="confusionMatrices" style="margin-top:2rem;"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+    // Elements
+    const datasetSelect = document.getElementById('datasetSelect');
+    const targetSelect = document.getElementById('targetSelect');
+    const runBtn = document.getElementById('runBtn');
+    const form = document.getElementById('modelForm');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultsDiv = document.getElementById('results');
+    const summaryDiv = document.getElementById('summary');
+    const chartCanvas = document.getElementById('chart');
+    const tableDiv = document.getElementById('table');
+    const confusionMatricesDiv = document.getElementById('confusionMatrices');
+    let chartInstance = null;
+
+    // Tab switching logic
+    const modelTab = document.getElementById('modelTab');
+    const consumerTab = document.getElementById('consumerTab');
+    const modelSection = document.getElementById('modelSection');
+    
+    // Tab switching
+    modelTab.addEventListener('click', () => {
+        modelTab.style.background = '#2563eb';
+        modelTab.style.color = '#fff';
+        consumerTab.style.background = '#6b7280';
+        consumerTab.style.color = '#fff';
+        modelSection.style.display = 'block';
+    });
+    
+    consumerTab.addEventListener('click', () => {
+        // Redirect to the data consumer page
+        window.location.href = '/reports/data-consumer';
+    });
+
+    // Load datasets on page load
+    window.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const res = await fetch('/reports/datasets');
+            const data = await res.json();
+            console.log('Datasets API response:', data);
+            datasetSelect.innerHTML = '<option value="">Select a dataset</option>';
+            (data.datasets || data).forEach(ds => {
+                const opt = document.createElement('option');
+                opt.value = ds.dataset_id;
+                opt.textContent = ds.name;
+                datasetSelect.appendChild(opt);
+            });
+        } catch (e) {
+            datasetSelect.innerHTML = '<option value="">Failed to load datasets</option>';
+        }
+    });
+
+    // Load columns when dataset changes
+    datasetSelect.addEventListener('change', async () => {
+        targetSelect.innerHTML = '<option value="">Loading...</option>';
+        targetSelect.disabled = true;
+        if (!datasetSelect.value) {
+            targetSelect.innerHTML = '<option value="">Select dataset first</option>';
+            return;
+        }
+        try {
+            const res = await fetch(`/reports/dataset/${datasetSelect.value}`);
+            const data = await res.json();
+            console.log('Dataset details API response:', data);
+            const cols = (data.pricing_analysis && data.pricing_analysis.attribute_weights)
+                ? Object.keys(data.pricing_analysis.attribute_weights)
+                : [];
+            targetSelect.innerHTML = '<option value="">Select target column</option>';
+            cols.forEach(col => {
+                const opt = document.createElement('option');
+                opt.value = col;
+                opt.textContent = col;
+                targetSelect.appendChild(opt);
+            });
+            targetSelect.disabled = false;
+        } catch (e) {
+            targetSelect.innerHTML = '<option value="">Failed to load columns</option>';
+        }
+    });
+
+    // Helper function to create confusion matrix HTML
+    function createConfusionMatrixHTML(matrix, labels) {
+        if (!matrix || !Array.isArray(matrix)) return '<p>No confusion matrix data available</p>';
+        
+        const n = matrix.length;
+        let html = '<div class="confusion-matrix-container"><div style="overflow-x:auto;"><table class="confusion-matrix-table">';
+        
+        // Header row with predicted labels
+        html += '<tr><th>Actual \\ Predicted</th>';
+        for (let i = 0; i < n; i++) {
+            const label = labels[i] || `Class ${i}`;
+            html += `<th>${label}</th>`;
+        }
+        html += '</tr>';
+        
+        // Data rows
+        for (let i = 0; i < n; i++) {
+            const actualLabel = labels[i] || `Class ${i}`;
+            html += `<tr><td class="header">${actualLabel}</td>`;
+            for (let j = 0; j < n; j++) {
+                const value = matrix[i][j];
+                const isDiagonal = i === j;
+                const cellClass = isDiagonal ? 'correct' : 'incorrect';
+                html += `<td class="${cellClass}">${value}</td>`;
+            }
+            html += '</tr>';
+        }
+        html += '</table></div></div>';
+        
+        return html;
+    }
+
+    // Handle form submit
+    form.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        errorMsg.style.display = 'none';
+        resultsDiv.style.display = 'none';
+        runBtn.disabled = true;
+        runBtn.textContent = 'Running...';
+        summaryDiv.innerHTML = '';
+        tableDiv.innerHTML = '';
+        confusionMatricesDiv.innerHTML = '';
+        if (chartInstance) { chartInstance.destroy(); }
+        chartCanvas.style.display = 'none';
+        try {
+            const params = new URLSearchParams({
+                dataset_id: datasetSelect.value,
+                target_column: targetSelect.value,
+                epsilon_values: document.getElementById('epsilonInput').value,
+                test_size: document.getElementById('testSizeInput').value
+            });
+            const res = await fetch(`/reports/model-comparison?${params}`);
+            const data = await res.json();
+            if (!res.ok || data.error) throw new Error(data.error || 'Failed to run model comparison');
+
+            // Extract model comparison results
+            const comparison = data.model_comparison || {};
+            const recommendations = data.recommendations || [];
+            const results = comparison.noisy_comparisons || [];
+            const summary = comparison.summary || {};
+
+            // Show summary
+            summaryDiv.innerHTML = `<div><b>Model Type:</b> ${summary.model_type || '-'}<br><b>Target Column:</b> ${summary.target_column || '-'}<br><b>Total Comparisons:</b> ${summary.total_comparisons || results.length}</div>`;
+
+            // Show chart
+            if (results.length) {
+                chartCanvas.style.display = 'block';
+                if (chartInstance) chartInstance.destroy();
+                chartInstance = new Chart(chartCanvas, {
+                type: 'line',
+                data: {
+                        labels: results.map(r => `ε=${r.epsilon}`),
+                    datasets: [{
+                            label: 'Accuracy on Noisy Test Data',
+                            data: results.map(r => r.metrics.accuracy),
+                            borderColor: '#2563eb',
+                            backgroundColor: '#93c5fd55',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: { 
+                        scales: { y: { min: 0, max: 1 } },
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Model Performance: Clean Training vs Noisy Test Data'
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Show table
+            if (results.length) {
+                let html = '<table style="width:100%;margin-top:1rem;border-collapse:collapse;"><tr><th>Test Data Privacy (ε)</th><th>Accuracy on Noisy Test</th><th>F1 Score on Noisy Test</th><th>Precision on Noisy Test</th><th>Recall on Noisy Test</th></tr>';
+                results.forEach(r => {
+                    html += `<tr><td>${r.epsilon}</td><td>${(r.metrics.accuracy*100).toFixed(1)}%</td><td>${(r.metrics.f1_score*100).toFixed(1)}%</td><td>${(r.metrics.precision*100).toFixed(1)}%</td><td>${(r.metrics.recall*100).toFixed(1)}%</td></tr>`;
+                });
+                html += '</table>';
+                tableDiv.innerHTML = html;
+            }
+
+            // Show confusion matrices for classification tasks
+            if (summary.model_type === 'classification') {
+                const original = comparison.original || {};
+                const classLabels = original.class_labels || [];
+                
+                let confusionHtml = '<h3 style="font-size:1.1rem; font-weight:600; margin-top:2rem; margin-bottom:1rem;">Confusion Matrices</h3>';
+                
+                // Original model confusion matrix
+                if (original.confusion_matrix) {
+                    confusionHtml += '<div style="margin-bottom:2rem;"><h4 style="font-size:1rem; font-weight:500; margin-bottom:0.5rem;">Original Model (Clean Test Data)</h4>';
+                    confusionHtml += createConfusionMatrixHTML(original.confusion_matrix, classLabels);
+                    confusionHtml += '</div>';
+                }
+                
+                // Noisy test confusion matrices
+                results.forEach(r => {
+                    if (r.confusion_matrix) {
+                        confusionHtml += `<div style="margin-bottom:2rem;"><h4 style="font-size:1rem; font-weight:500; margin-bottom:0.5rem;">Noisy Test Data (ε=${r.epsilon})</h4>`;
+                        confusionHtml += createConfusionMatrixHTML(r.confusion_matrix, classLabels);
+                        confusionHtml += '</div>';
+                    }
+                });
+                
+                confusionMatricesDiv.innerHTML = confusionHtml;
+            }
+
+            // Show recommendations
+            if (recommendations.length) {
+                summaryDiv.innerHTML += '<div style="margin-top:1rem;"><b>Recommendations:</b><ul>' + recommendations.map(r => `<li>${r}</li>`).join('') + '</ul></div>';
+            }
+
+            resultsDiv.style.display = 'block';
+        } catch (err) {
+            errorMsg.textContent = err.message;
+            errorMsg.style.display = 'block';
+        } finally {
+            runBtn.disabled = false;
+            runBtn.textContent = 'Run Robustness Analysis';
+        }
+    });
+    </script>
+</body>
+</html>

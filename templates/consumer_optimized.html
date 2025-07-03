@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Privacy Marketplace - Consumer</title>
+
+    <!-- External CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/consumer.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h1>🔍 Data Consumer</h1>
+                    <p>Browse and purchase privacy-protected datasets</p>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="main-content">
+
+            <!-- Step 1: Browse Datasets -->
+            <section class="card">
+                <h2>📊 Available Datasets</h2>
+
+                <!-- Loading State -->
+                <div id="loadingDatasets" class="loading hidden">
+                    <div class="loading-spinner"></div>
+                    <p>Loading datasets...</p>
+                </div>
+
+                <!-- Dataset List -->
+                <div id="datasetList" class="hidden">
+                    <!-- Datasets will be loaded here -->
+                </div>
+
+                <!-- No Datasets Message -->
+                <div id="noDatasets" class="hidden text-center">
+                    <p>No datasets available in the marketplace.</p>
+                </div>
+            </section>
+
+            <!-- Smart Query Builder Section -->
+            <section class="card hidden" id="smartQueryBuilderSection">
+                <h2>🧠 Smart Query Builder</h2>
+                <p class="mb-2 text-gray-500">Visually build complex queries with drag-and-drop, templates, and smart
+                    suggestions.</p>
+                <div id="smartQueryBuilder"></div>
+            </section>
+
+            <!-- Step 2: Select Attributes -->
+            <section id="attributeSelection" class="card hidden">
+                <h2>🎯 Select Attributes!!!!!!!!!!!</h2>
+                <p id="selectedDatasetInfo" class="mb-4"></p>
+
+                <div id="attributeGrid" class="attribute-grid">
+                    <!-- Attributes will be loaded here -->
+                </div>
+
+                <div class="selected-attributes">
+                    <p><strong>Selected:</strong> <span id="selectedAttributesDisplay">None</span></p>
+                </div>
+
+                <!-- Filters Section -->
+                <div class="filters-container">
+                    <h3>🔎 Add Filters/Conditions</h3>
+                    <div id="filtersContainer"></div>
+                    <button type="button" id="addFilterBtn" class="add-filter-btn">+ Add Filter</button>
+                </div>
+            </section>
+
+            <!-- Step 3: Configure Query -->
+            <section id="queryConfiguration" class="card hidden">
+                <h2>⚙️ Query Configuration</h2>
+
+                <div class="query-config">
+                    <div class="form-group">
+                        <label for="numValues">Number of Records (K)</label>
+                        <div class="records-input-container">
+                            <input type="number" id="numValues" min="1" max="1000" value="10">
+                            <div id="availableRecordsInfo" class="available-records-info">
+                                <span class="text-sm text-gray-600">Available: <span id="availableCount">Calculating...</span></span>
+                            </div>
+                        </div>
+                        <p class="help-text">How many records you want to retrieve from the filtered dataset</p>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="epsilon">Privacy Level (ε)</label>
+                        <input type="number" id="epsilon" min="0.1" max="1.0" step="0.1" value="0.5">
+                        <p class="help-text">Lower = more private, Higher = more accurate</p>
+                    </div>
+                </div>
+
+                <button id="getPriceBtn" class="btn btn-primary btn-full mt-6">
+                    💰 Get Price Quote
+                </button>
+            </section>
+
+            <!-- Step 4: Price Quote -->
+            <section id="priceQuote" class="card hidden">
+                <h2>💰 Price Quote</h2>
+
+                <div id="priceDetails" class="price-details">
+                    <!-- Price details will be shown here -->
+                </div>
+
+                <button id="purchaseBtn" class="btn btn-success btn-full mt-6">
+                    🛒 Purchase Data
+                </button>
+            </section>
+
+            <!-- Step 5: Results -->
+            <section id="results" class="card hidden">
+                <h2>📈 Your Data</h2>
+
+                <div id="privacyNote" class="privacy-note hidden">
+                    <!-- Privacy note will be shown here -->
+                </div>
+
+                <div id="dataTable" class="data-table">
+                    <!-- Data table will be shown here -->
+                </div>
+                <div id="dataCounts" class="data-counts mt-2">
+                    <!-- Raw and privatized counts will be shown here by JS -->
+                </div>
+                <!-- Query Comparison Report will be rendered here -->
+                <div id="queryComparisonReport" class="mt-4"></div>
+            </section>
+
+            <!-- Error Display -->
+            <div id="errorDisplay" class="error-display hidden">
+                <p id="errorMessage" class="error-message"></p>
+            </div>
+        </main>
+    </div>
+
+    <!-- External JavaScript - Load in correct order -->
+    <script src="{{ url_for('static', filename='js/config.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/api-service.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/consumer.js') }}"></script>
+
+    <!-- Add at the end of the body, after other scripts -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/query-builder.css') }}">
+    <script src="{{ url_for('static', filename='js/query-builder.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</body>
+
+</html>

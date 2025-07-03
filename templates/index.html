@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FSD Data Marketplace</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .response-item {
+            border: 1px solid #e2e8f0;
+            padding: 8px;
+            margin-top: 8px;
+            border-radius: 4px;
+            word-break: break-all;
+        }
+
+        .response-item strong {
+            font-weight: 600;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        .data-table th,
+        .data-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        .data-table th {
+            background-color: #f2f2f2;
+        }
+
+        .dataset-card {
+            transition: all 0.2s ease-in-out;
+        }
+
+        .dataset-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .dataset-card.selected-dataset {
+            background-color: #e6fffa;
+            border-color: #38b2ac;
+            ring-width: 2px;
+            ring-color: #38b2ac;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100 text-gray-800 p-4 md:p-8">
+
+    <div class="container mx-auto max-w-5xl bg-white p-6 md:p-8 rounded-lg shadow-xl">
+        <header class="mb-8 text-center">
+            <h1 class="text-3xl md:text-4xl font-bold text-indigo-600">Fair Secure Data Marketplace</h1>
+            <p class="text-gray-600 mt-2">A platform for privacy-aware data valuation and exchange.</p>
+        </header>
+
+        <nav class="mb-8 flex justify-center space-x-2 md:space-x-4 border-b pb-4">
+            <button id="showProducerViewBtn"
+                class="px-4 py-2 bg-indigo-500 text-white rounded-md hover:bg-indigo-600 focus:outline-none focus:ring-2 focus:ring-indigo-300 transition-colors">Producer
+                Portal</button>
+            <button id="showConsumerViewBtn"
+                class="px-4 py-2 bg-teal-500 text-white rounded-md hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-300 transition-colors">Consumer
+                Marketplace</button>
+            <button id="showReportsBtn"
+                class="px-4 py-2 bg-purple-500 text-white rounded-md hover:bg-purple-600 focus:outline-none focus:ring-2 focus:ring-purple-300 transition-colors">📊
+                Reports</button>
+        </nav>
+
+        <section id="producerView" class="space-y-6 hidden">
+            <h2 class="text-2xl font-semibold text-indigo-700 border-b pb-2">Data Producer: Submit New Dataset</h2>
+
+            <!-- Step-by-step guidance -->
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <h3 class="text-lg font-medium text-blue-800 mb-2">📋 Quick Setup Guide</h3>
+                <ol class="text-sm text-blue-700 space-y-1">
+                    <li>1. Upload your CSV file (must have headers)</li>
+                    <li>2. Fill in basic dataset information</li>
+                    <li>3. Select which column is sensitive (e.g., income, salary)</li>
+                    <li>4. Set your pricing range (min/max)</li>
+                    <li>5. Submit and get your dataset ID for consumers</li>
+                </ol>
+            </div>
+
+            <form id="datasetForm" class="space-y-6 p-6 border border-indigo-100 rounded-lg bg-indigo-50">
+
+                <!-- Basic Information -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="datasetName" class="block text-sm font-medium text-gray-700">Dataset Name *</label>
+                        <input type="text" id="datasetName" name="datasetName" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                            placeholder="e.g., Adult Income Data">
+                    </div>
+                    <div>
+                        <label for="sensitiveAttribute" class="block text-sm font-medium text-gray-700">Sensitive Column
+                            *</label>
+                        <select id="sensitiveAttribute" name="sensitiveAttribute" required
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+                            <option value="">Select after uploading CSV</option>
+                        </select>
+                        <p class="mt-1 text-xs text-gray-500">Choose the column that contains sensitive information</p>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="datasetDescription" class="block text-sm font-medium text-gray-700">Description
+                        *</label>
+                    <textarea id="datasetDescription" name="datasetDescription" rows="2" required
+                        class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                        placeholder="Brief description of your dataset"></textarea>
+                </div>
+
+                <!-- CSV Upload -->
+                <div>
+                    <label for="csvFile" class="block text-sm font-medium text-gray-700">Upload CSV File *</label>
+                    <input type="file" id="csvFile" name="csvFile" accept=".csv" required
+                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100">
+                    <p class="mt-1 text-xs text-gray-500">File must have headers. First few rows will be shown below.
+                    </p>
+                </div>
+
+                <!-- CSV Preview -->
+                <div id="csvPreview" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">CSV Preview (first 3 rows):</label>
+                    <div id="csvPreviewContent"
+                        class="bg-white border border-gray-300 rounded-md p-3 text-xs font-mono overflow-x-auto">
+                    </div>
+                </div>
+
+                <!-- Pricing -->
+                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <h3 class="text-md font-medium text-yellow-800 mb-2">💰 Set Your Pricing</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="initialPMax" class="block text-sm font-medium text-gray-700">Maximum Price
+                                *</label>
+                            <input type="number" id="initialPMax" name="initialPMax" step="0.01" min="0.01" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="e.g., 1000.00">
+                            <p class="mt-1 text-xs text-gray-500">Price for high utility data (ε≈1)</p>
+                        </div>
+                        <div>
+                            <label for="initialPMin" class="block text-sm font-medium text-gray-700">Minimum Price
+                                *</label>
+                            <input type="number" id="initialPMin" name="initialPMin" step="0.01" min="0.01" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                placeholder="e.g., 10.00">
+                            <p class="mt-1 text-xs text-gray-500">Price for high privacy data (ε≈0)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Auto-generated attribute types (hidden initially) -->
+                <div id="attributeTypesSection" class="hidden">
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Column Types (Auto-detected):</label>
+                    <div id="attributeTypesDisplay" class="bg-white border border-gray-300 rounded-md p-3 text-sm">
+                    </div>
+                    <textarea id="attributeTypes" name="attributeTypes" class="hidden"></textarea>
+                </div>
+
+                <button type="submit"
+                    class="w-full px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors">
+                    🚀 Submit Dataset
+                </button>
+            </form>
+
+            <div id="producerResponseAreaWrapper" class="mt-6 hidden">
+                <h3 class="text-lg font-medium text-gray-700 mb-2">✅ Submission Result:</h3>
+                <div id="producerResponseArea"
+                    class="p-4 bg-gray-50 rounded-md border border-gray-200 text-sm min-h-[100px]">
+                    <pre class="whitespace-pre-wrap break-all"></pre>
+                </div>
+            </div>
+        </section>
+
+        <section id="consumerView" class="space-y-6 hidden">
+            <h2 class="text-2xl font-semibold text-teal-700 border-b pb-2">Consumer Marketplace: Discover & Query
+                Datasets</h2>
+
+            <!-- Query ID Information -->
+            <div class="mb-6 p-4 border border-blue-200 rounded-lg bg-blue-50">
+                <h3 class="text-lg font-medium text-blue-800 mb-2">💡 How to Get Query IDs</h3>
+                <div class="text-sm text-blue-700 space-y-1">
+                    <p><strong>Step 1:</strong> Get a price quote for any dataset</p>
+                    <p><strong>Step 2:</strong> Copy the Query ID from the response</p>
+                    <p><strong>Step 3:</strong> Use it in the <a href="/query-comparison" class="text-blue-600 underline font-medium">Query Comparison Report</a> for detailed analysis</p>
+                    <p class="text-xs mt-2">🔍 Query IDs are unique identifiers that let you view detailed comparison results between raw and differentially private data.</p>
+                </div>
+            </div>
+
+            <div class="mb-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-xl font-medium text-gray-800 mb-3">🔎 Available Datasets!</h3>
+                <div id="datasetListingArea"
+                    class="space-y-3 max-h-80 overflow-y-auto p-2 border rounded-md bg-white shadow-sm">
+                    <p class="text-gray-500 italic">Loading datasets...</p>
+                </div>
+            </div>
+
+            <div class="p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-xl font-medium text-gray-800 mb-3">1. Get Price Offer for Selected Dataset</h3>
+                <form id="queryPriceForm" class="space-y-4">
+                    <div>
+                        <label for="datasetIdForQuery" class="block text-sm font-medium text-gray-700">Selected Dataset
+                            ID:</label>
+                        <input type="text" id="datasetIdForQuery" required readonly
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none sm:text-sm"
+                            placeholder="Select a dataset from the list above">
+                    </div>
+                    <div>
+                        <label for="selectedAttributes" class="block text-sm font-medium text-gray-700">Selected
+                            Attributes (for query):</label>
+                        <input type="text" id="selectedAttributes" readonly
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none sm:text-sm"
+                            placeholder="Select attributes from below">
+                        <div id="attributeSelectionHelper"
+                            class="mt-2 p-3 border rounded-md bg-white shadow-sm max-h-60 overflow-y-auto">
+                            <p class="text-xs text-gray-400 italic">Select a dataset above to see its attributes.</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Enhanced Filters Section -->
+                    <div class="mt-4">
+                        <h4 class="text-lg font-medium text-gray-800 mb-3">🔎 Add Filters/Conditions</h4>
+                        <div id="filtersContainer" class="space-y-2 mb-3">
+                            <!-- Filters will be dynamically added here -->
+                        </div>
+                        <button type="button" id="addFilterBtn" 
+                            class="px-3 py-2 bg-blue-100 text-blue-800 rounded-md hover:bg-blue-200 text-sm transition-colors">
+                            + Add Filter
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="numValuesK" class="block text-sm font-medium text-gray-700">Number of
+                                Values/Rows (k):</label>
+                            <input type="number" id="numValuesK" step="1" min="1" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                                placeholder="e.g., 100">
+                        </div>
+                        <div>
+                            <label for="epsilonQuery" class="block text-sm font-medium text-gray-700">Privacy Budget
+                                (Epsilon ε):</label>
+                            <input type="number" step="0.01" min="0.01" max="1.0" id="epsilonQuery" required
+                                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-teal-500 focus:border-teal-500 sm:text-sm"
+                                placeholder="e.g., 0.5 (0.01 to 1.0)">
+                        </div>
+                    </div>
+                    <button type="submit"
+                        class="w-full px-4 py-2 bg-teal-500 text-white font-semibold rounded-md shadow-sm hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 transition-colors">Get
+                        Price Offer</button>
+                </form>
+                <div id="priceResponseAreaWrapper" class="mt-4">
+                    <h4 class="text-md font-medium text-gray-700 mb-1">Price Offer Response:</h4>
+                    <div id="priceResponseArea"
+                        class="p-3 bg-white rounded-md border border-gray-200 text-sm min-h-[70px]">
+                        <pre class="whitespace-pre-wrap break-all"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                <h3 class="text-xl font-medium text-gray-800 mb-3">2. Purchase Data</h3>
+                <form id="purchaseForm" class="space-y-4">
+                    <div>
+                        <label for="queryIdForPurchase" class="block text-sm font-medium text-gray-700">Query ID (from
+                            price offer):</label>
+                        <input type="text" id="queryIdForPurchase" required readonly
+                            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm bg-gray-100 focus:outline-none sm:text-sm"
+                            placeholder="Auto-filled from price offer response">
+                    </div>
+                    <button type="submit"
+                        class="w-full px-4 py-2 bg-emerald-500 text-white font-semibold rounded-md shadow-sm hover:bg-emerald-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">Purchase
+                        Data</button>
+                </form>
+                <div id="purchaseResponseAreaWrapper" class="mt-4">
+                    <h4 class="text-md font-medium text-gray-700 mb-1">Purchase Response:</h4>
+                    <div id="purchaseResponseArea"
+                        class="p-3 bg-white rounded-md border border-gray-200 text-sm min-h-[70px]">
+                        <pre class="whitespace-pre-wrap break-all"></pre>
+                    </div>
+                    <div id="dataDisplayTableContainer" class="mt-3"></div>
+                </div>
+            </div>
+        </section>
+
+        <div id="loadingIndicator"
+            class="hidden fixed inset-0 bg-gray-700 bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-6 rounded-lg shadow-xl flex items-center space-x-4">
+                <svg class="animate-spin h-8 w-8 text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none"
+                    viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                    </path>
+                </svg>
+                <span class="text-lg font-medium text-gray-700">Processing... Please wait.</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const producerView = document.getElementById('producerView');
+        const consumerView = document.getElementById('consumerView');
+        const showProducerViewBtn = document.getElementById('showProducerViewBtn');
+        const showConsumerViewBtn = document.getElementById('showConsumerViewBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+
+        // Debug: Check if main view buttons are found
+        console.log("[DEBUG] Initializing: showProducerViewBtn found:", showProducerViewBtn);
+        console.log("[DEBUG] Initializing: showConsumerViewBtn found:", showConsumerViewBtn);
+
+
+        const API_BASE_URL = 'http://localhost:5001'; // Your backend API URL
+
+        function showLoading() {
+            console.log("[DEBUG] showLoading() called");
+            loadingIndicator.classList.remove('hidden');
+        }
+        function hideLoading() {
+            console.log("[DEBUG] hideLoading() called");
+            loadingIndicator.classList.add('hidden');
+        }
+
+        // Generic function to display JSON responses, especially errors
+        function displayResponse(areaId, data, isError = false, responseWrapperId = null) {
+            const area = document.getElementById(areaId)?.querySelector('pre');
+            if (!area) {
+                console.error(`[DEBUG] Display area with pre tag not found for ID: ${areaId}`);
+                return;
+            }
+            area.classList.remove('text-red-600', 'text-green-700', 'text-yellow-600');
+
+            if (responseWrapperId) {
+                document.getElementById(responseWrapperId)?.classList.remove('hidden');
+            }
+
+            if (isError) {
+                let errorMessage = "Error: Operation failed.";
+                if (data && data.error) {
+                    errorMessage = `Error: ${data.error}`;
+                    if (data.details) errorMessage += `\nDetails: ${data.details}`;
+                } else if (typeof data === 'string') {
+                    errorMessage = data;
+                } else {
+                    errorMessage = `Error: ${JSON.stringify(data, null, 2)}`;
+                }
+                area.textContent = errorMessage;
+                area.classList.add('text-red-600');
+            } else {
+                area.textContent = JSON.stringify(data, null, 2);
+                area.classList.add('text-gray-700');
+            }
+            area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+        // In your index.html <script> section:
+        // Replace the existing displayProducerSuccessResponse function with this one.
+
+        function displayProducerSuccessResponse(areaId, responseData, responseWrapperId = null) {
+            const area = document.getElementById(areaId)?.querySelector('pre');
+            if (!area) {
+                console.error("[DEBUG] displayProducerSuccessResponse: Area not found:", areaId);
+                return;
+            }
+            area.classList.remove('text-red-600', 'text-green-700', 'text-yellow-600', 'text-gray-700');
+
+            if (responseWrapperId) {
+                document.getElementById(responseWrapperId)?.classList.remove('hidden');
+            }
+
+            if (!responseData || !responseData.details) {
+                area.textContent = "Operation successful, but full details not available in response.";
+                area.classList.add('text-yellow-600');
+                area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                return;
+            }
+
+            const details = responseData.details;
+            let output = "✅ Dataset Processing Successful!\n\n";
+            output += `Message: ${responseData.message || 'N/A'}\n`;
+            output += `--------------------------------------------------\n`;
+            output += `Dataset Name: ${details.name || 'N/A'}\n`;
+            output += `Dataset ID: ${details.dataset_id || 'N/A'} (Use this ID for consumer queries)\n`;
+            output += `Description: ${details.description || 'N/A'}\n`;
+            output += `Status: ${details.status || 'Completed'}\n`;
+            output += `Your Initial P_max (for 𝜖≈1 utility): ${details.p_max_initial !== undefined ? details.p_max_initial : 'N/A'}\n`;
+            output += `Your Initial P_min (for 𝜖≈0 utility): ${details.p_min_initial !== undefined ? details.p_min_initial : 'N/A'}\n`;
+
+            if (details.preprocessing_outputs) {
+                output += `\n--- Data Summary ---\n`;
+                output += `  Total Records Processed: ${details.preprocessing_outputs.n_total_records !== undefined ? details.preprocessing_outputs.n_total_records : 'N/A'}\n`;
+                output += `  Sensitive Attribute: ${details.sensitive_attribute || 'N/A'}\n`;
+                if (details.preprocessing_outputs.all_attribute_names && Array.isArray(details.preprocessing_outputs.all_attribute_names)) {
+                    output += `  All Attributes Found: ${details.preprocessing_outputs.all_attribute_names.join(', ')}\n`;
+                }
+            }
+
+            if (details.weights && typeof details.weights === 'object' && Object.keys(details.weights).length > 0) {
+                output += `\n--- Calculated Attribute Weights (Importance %) ---\n`;
+                for (const attr in details.weights) {
+                    output += `  ${attr}: ${parseFloat(details.weights[attr]).toFixed(2)}%\n`;
+                }
+            }
+
+            if (details.prices_per_attribute && details.prices_per_attribute.max && details.prices_per_attribute.min) {
+                output += `\n--- Derived Price Ranges Per Attribute (based on your P_max/P_min) ---\n`;
+                for (const attr in details.prices_per_attribute.max) {
+                    const pMaxAttr = parseFloat(details.prices_per_attribute.max[attr]).toFixed(2);
+                    const pMinAttr = parseFloat(details.prices_per_attribute.min[attr]).toFixed(2);
+                    output += `  ${attr}: P_min_attr = ${pMinAttr}, P_max_attr = ${pMaxAttr}\n`;
+                }
+            }
+            // Note: Price per attribute value might be too granular for this summary, but could be added if desired.
+
+            area.textContent = output;
+            area.classList.add('text-green-700');
+            area.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+
+
+
+
+
+
+        function displayDataAsTable(containerId, dataArray, privacyNote) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (!dataArray || dataArray.length === 0) {
+                container.innerHTML = `<p class="text-gray-600 italic p-2">No tabular data returned or data is empty.</p>`;
+                if (privacyNote) {
+                    const noteP = document.createElement('p');
+                    noteP.textContent = `Note: ${privacyNote}`;
+                    noteP.className = 'text-xs text-gray-500 mt-2 p-2';
+                    container.appendChild(noteP);
+                }
+                return;
+            }
+
+            const tableWrapper = document.createElement('div');
+            tableWrapper.className = 'overflow-x-auto';
+            const table = document.createElement('table');
+            table.className = 'data-table';
+
+            const thead = table.createTHead();
+            const headerRow = thead.insertRow();
+            const headers = Object.keys(dataArray[0]);
+            headers.forEach(headerText => {
+                const th = document.createElement('th');
+                th.textContent = headerText;
+                headerRow.appendChild(th);
+            });
+
+            const tbody = table.createTBody();
+            dataArray.forEach(obj => {
+                const row = tbody.insertRow();
+                headers.forEach(header => {
+                    const cell = row.insertCell();
+                    let value = obj[header];
+                    if (typeof value === 'number') {
+                        value = Number.isInteger(value) ? value : value.toFixed(3);
+                    }
+                    cell.textContent = value === null || value === undefined ? '' : value;
+                });
+            });
+            tableWrapper.appendChild(table);
+            container.appendChild(tableWrapper);
+
+            if (privacyNote) {
+                const noteP = document.createElement('p');
+                noteP.textContent = `Privacy Note: ${privacyNote}`;
+                noteP.className = 'text-xs text-gray-500 mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded';
+                container.appendChild(noteP);
+            }
+        }
+
+        // View Switching Logic
+        if (showProducerViewBtn) {
+            showProducerViewBtn.addEventListener('click', () => {
+                console.log("[DEBUG] Producer Portal button CLICKED.");
+                producerView.classList.remove('hidden');
+                consumerView.classList.add('hidden');
+                showProducerViewBtn.classList.replace('bg-indigo-500', 'bg-indigo-700');
+                showConsumerViewBtn.classList.replace('bg-teal-700', 'bg-teal-500');
+            });
+        }
+
+        if (showConsumerViewBtn) {
+
+
+            // Replace the existing showConsumerViewBtn.addEventListener('click', ...) with this:
+
+            showConsumerViewBtn.addEventListener('click', () => {
+                console.log("[DEBUG] Consumer Marketplace button CLICKED - Opening consumer-simple page.");
+                // Open the consumer-simple page in a new tab
+                window.open('/consumer-simple', '_blank');
+            });
+
+
+
+        }
+
+
+
+
+        // Producer form handling
+        const datasetForm = document.getElementById('datasetForm');
+        const csvFileInput = document.getElementById('csvFile');
+        const sensitiveAttributeSelect = document.getElementById('sensitiveAttribute');
+        const csvPreview = document.getElementById('csvPreview');
+        const csvPreviewContent = document.getElementById('csvPreviewContent');
+        const attributeTypesSection = document.getElementById('attributeTypesSection');
+        const attributeTypesDisplay = document.getElementById('attributeTypesDisplay');
+        const attributeTypesTextarea = document.getElementById('attributeTypes');
+
+        // CSV file handling
+        if (csvFileInput) {
+            csvFileInput.addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = function (e) {
+                        const csvContent = e.target.result;
+                        processCSVFile(csvContent);
+                    };
+                    reader.readAsText(file);
+                }
+            });
+        }
+
+        function processCSVFile(csvContent) {
+            try {
+                const lines = csvContent.split('\n').filter(line => line.trim());
+                if (lines.length === 0) {
+                    alert('CSV file is empty');
+                    return;
+                }
+
+                // Parse headers
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+
+                // Show preview
+                showCSVPreview(lines.slice(0, 4), headers);
+
+                // Populate sensitive attribute dropdown
+                populateSensitiveAttributeDropdown(headers);
+
+                // Auto-detect attribute types
+                const attributeTypes = detectAttributeTypes(lines, headers);
+                showAttributeTypes(attributeTypes);
+
+            } catch (error) {
+                console.error('Error processing CSV:', error);
+                alert('Error processing CSV file. Please check the format.');
+            }
+        }
+
+        function showCSVPreview(lines, headers) {
+            csvPreview.classList.remove('hidden');
+            let previewHTML = '<table class="w-full border-collapse">';
+
+            // Headers
+            previewHTML += '<tr class="bg-gray-100">';
+            headers.forEach(header => {
+                previewHTML += `<th class="border px-2 py-1 text-left">${header}</th>`;
+            });
+            previewHTML += '</tr>';
+
+            // Data rows
+            lines.slice(1, 4).forEach(line => {
+                const values = line.split(',').map(v => v.trim().replace(/"/g, ''));
+                previewHTML += '<tr>';
+                values.forEach(value => {
+                    previewHTML += `<td class="border px-2 py-1">${value}</td>`;
+                });
+                previewHTML += '</tr>';
+            });
+
+            previewHTML += '</table>';
+            csvPreviewContent.innerHTML = previewHTML;
+        }
+
+        function populateSensitiveAttributeDropdown(headers) {
+            sensitiveAttributeSelect.innerHTML = '<option value="">Select sensitive column</option>';
+            headers.forEach(header => {
+                const option = document.createElement('option');
+                option.value = header;
+                option.textContent = header;
+                sensitiveAttributeSelect.appendChild(option);
+            });
+        }
+
+        function detectAttributeTypes(lines, headers) {
+            const attributeTypes = {};
+            const sampleRows = lines.slice(1, Math.min(10, lines.length)); // Use up to 10 rows for detection
+
+            headers.forEach(header => {
+                const columnIndex = headers.indexOf(header);
+                const values = sampleRows.map(row => {
+                    const cols = row.split(',').map(v => v.trim().replace(/"/g, ''));
+                    return cols[columnIndex] || '';
+                }).filter(v => v !== '');
+
+                // Simple type detection
+                let numericCount = 0;
+                values.forEach(value => {
+                    if (!isNaN(value) && value !== '') {
+                        numericCount++;
+                    }
+                });
+
+                // If more than 70% of values are numeric, consider it numeric
+                const isNumeric = values.length > 0 && (numericCount / values.length) > 0.7;
+                attributeTypes[header] = isNumeric ? 'numeric' : 'categorical';
+            });
+
+            return attributeTypes;
+        }
+
+        function showAttributeTypes(attributeTypes) {
+            attributeTypesSection.classList.remove('hidden');
+            let displayHTML = '<div class="grid grid-cols-2 md:grid-cols-3 gap-2">';
+
+            for (const [column, type] of Object.entries(attributeTypes)) {
+                const typeColor = type === 'numeric' ? 'text-blue-600' : 'text-green-600';
+                const typeIcon = type === 'numeric' ? '🔢' : '📝';
+                displayHTML += `
+                    <div class="flex items-center justify-between p-2 bg-gray-50 rounded border">
+                        <span class="text-sm font-medium">${column}</span>
+                        <span class="text-xs ${typeColor}">${typeIcon} ${type}</span>
+                    </div>
+                `;
+            }
+
+            displayHTML += '</div>';
+            attributeTypesDisplay.innerHTML = displayHTML;
+
+            // Store in hidden textarea
+            attributeTypesTextarea.value = JSON.stringify(attributeTypes);
+        }
+
+        // Producer form submission
+        if (datasetForm) {
+            datasetForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                console.log("[DEBUG] Producer form submitted.");
+                showLoading();
+
+                const producerResponsePre = document.getElementById('producerResponseArea').querySelector('pre');
+                producerResponsePre.textContent = 'Processing... Please wait.';
+                document.getElementById('producerResponseAreaWrapper')?.classList.remove('hidden');
+
+                const formData = new FormData(this);
+                const fileInput = document.getElementById('csvFile');
+                const file = fileInput.files[0];
+
+                if (!file) {
+                    displayResponse('producerResponseArea', { error: "Please select a CSV file." }, true, 'producerResponseAreaWrapper');
+                    hideLoading();
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async function (e) {
+                    console.log("[DEBUG] Producer CSV file read.");
+                    const csvContent = e.target.result;
+
+                    const payload = {
+                        dataset_name: formData.get('datasetName'),
+                        description: formData.get('datasetDescription'),
+                        csv_content: csvContent,
+                        initial_p_max: parseFloat(formData.get('initialPMax')),
+                        initial_p_min: parseFloat(formData.get('initialPMin')),
+                        sensitive_attribute_name: formData.get('sensitiveAttribute'),
+                        attribute_types: JSON.parse(attributeTypesTextarea.value),
+                        numeric_attribute_ranges: {} // Simplified - no ranges needed for basic functionality
+                    };
+
+                    console.log("[DEBUG] Producer payload ready:", payload);
+
+                    try {
+                        console.log("[DEBUG] Producer submitting to /producer/datasets");
+                        const response = await fetch(`${API_BASE_URL}/producer/datasets`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        });
+                        const data = await response.json();
+                        if (!response.ok) {
+                            console.error("[DEBUG] Producer submission error from API:", data);
+                            throw data;
+                        }
+                        console.log("[DEBUG] Producer submission successful:", data);
+                        displayProducerSuccessResponse('producerResponseArea', data, 'producerResponseAreaWrapper');
+                    } catch (error) {
+                        console.error('[DEBUG] Error submitting dataset (catch block):', error);
+                        displayResponse('producerResponseArea', error, true, 'producerResponseAreaWrapper');
+                    } finally {
+                        hideLoading();
+                    }
+                }.bind(this);
+                reader.onerror = function () {
+                    console.error("[DEBUG] FileReader error.");
+                    displayResponse('producerResponseArea', { error: "Failed to read the CSV file." }, true, 'producerResponseAreaWrapper');
+                    hideLoading();
+                };
+                reader.readAsText(file);
+            });
+        } else {
+            console.error("[DEBUG] datasetForm element NOT found!");
+        }
+
+
+        // Consumer Marketplace JS
+        const datasetListingArea = document.getElementById('datasetListingArea');
+        const attributeSelectionHelper = document.getElementById('attributeSelectionHelper');
+        const datasetIdForQueryInput = document.getElementById('datasetIdForQuery');
+        const selectedAttributesInput = document.getElementById('selectedAttributes');
+
+        console.log("[DEBUG] Consumer Marketplace JS elements: datasetListingArea:", datasetListingArea, " attributeSelectionHelper:", attributeSelectionHelper, "datasetIdForQueryInput:", datasetIdForQueryInput, "selectedAttributesInput:", selectedAttributesInput);
+
+
+        async function loadAndDisplayDatasets() {
+            console.log("[DEBUG] loadAndDisplayDatasets() function ENTERED."); // Log
+            showLoading();
+            datasetListingArea.innerHTML = '<p class="text-gray-500 italic p-2">Loading available datasets...</p>';
+            attributeSelectionHelper.innerHTML = '<p class="text-xs text-gray-400 italic p-2">Select a dataset to see its attributes.</p>';
+            selectedAttributesInput.value = '';
+            datasetIdForQueryInput.value = '';
+
+            try {
+                console.log(`[DEBUG] Fetching from: ${API_BASE_URL}/marketplace/datasets`); // Log
+                const response = await fetch(`${API_BASE_URL}/marketplace/datasets`);
+
+                console.log("[DEBUG] loadAndDisplayDatasets response status:", response.status); // Log response status
+                const data = await response.json();
+                console.log("[DEBUG] loadAndDisplayDatasets response data:", data); // Log response data
+
+                if (!response.ok) {
+                    console.error("[DEBUG] Error response from /marketplace/datasets:", data);
+                    throw data;
+                }
+
+                // Handle both array and wrapped object responses
+                const datasets = Array.isArray(data) ? data : (data.datasets || []);
+
+                datasetListingArea.innerHTML = '';
+                if (!datasets || datasets.length === 0) {
+                    datasetListingArea.innerHTML = '<p class="text-gray-500 italic p-2">No datasets currently available in the marketplace.</p>';
+                    // No return here, let finally handle hideLoading
+                } else {
+                    datasets.forEach(ds => {
+                        const card = document.createElement('div');
+                        card.className = 'dataset-card p-3 border rounded-md hover:bg-gray-50 cursor-pointer';
+                        card.setAttribute('data-dataset-id', ds.dataset_id);
+
+                        // Format the creation date
+                        const createdDate = ds.created_at ? new Date(ds.created_at).toLocaleDateString() : 'Unknown';
+
+                        card.innerHTML = `
+                            <h4 class="font-semibold text-teal-700">${ds.dataset_name || ds.name}</h4>
+                            <p class="text-xs text-gray-600 truncate" title="${ds.description || ''}">${ds.description || 'No description.'}</p>
+                            <p class="text-xs text-gray-500 mt-1">Records: ${ds.n_total_records || 'N/A'} | Created: ${createdDate}</p>
+                        `;
+                        card.onclick = () => {
+                            console.log("[DEBUG] Dataset card clicked. ID:", ds.dataset_id);
+                            datasetIdForQueryInput.value = ds.dataset_id;
+                            document.querySelectorAll('#datasetListingArea > div').forEach(c => c.classList.remove('selected-dataset', 'bg-teal-50', 'border-teal-400', 'ring-2', 'ring-teal-400'));
+                            card.classList.add('selected-dataset', 'bg-teal-50', 'border-teal-400', 'ring-2', 'ring-teal-400');
+                            loadAttributesForDataset(ds.dataset_id);
+                        };
+                        datasetListingArea.appendChild(card);
+                    });
+                }
+            } catch (error) {
+                console.error("[DEBUG] Error in loadAndDisplayDatasets (catch block):", error);
+                const displayError = error.error ? error : { error: (error.message || 'Failed to fetch datasets. Check server logs.') };
+                datasetListingArea.innerHTML = `<p class="text-red-500 italic p-2">⚠️ Error loading datasets: ${displayError.error}</p>`;
+            } finally {
+                console.log("[DEBUG] loadAndDisplayDatasets() finally block executing.");
+                hideLoading();
+            }
+        }
+
+        async function loadAttributesForDataset(datasetId) {
+            console.log(`[DEBUG] loadAttributesForDataset called with ID: '${datasetId}'`);
+            selectedAttributesInput.value = '';
+            attributeSelectionHelper.innerHTML = '';
+            
+            // Reset filters
+            filters = [];
+            attributeTypes = {};
+            attributeUniqueValues = {};
+            attributeMinMax = {};
+
+            if (!datasetId) {
+                attributeSelectionHelper.innerHTML = '<p class="text-xs text-gray-400 italic p-2">Select a dataset from the list above to see its attributes.</p>';
+                renderFilters();
+                return;
+            }
+            
+            showLoading();
+            attributeSelectionHelper.innerHTML = '<p class="text-xs text-gray-400 italic p-2">Loading attributes...</p>';
+            
+            try {
+                // Load attribute types
+                console.log(`[DEBUG] Fetching attributes from: ${API_BASE_URL}/marketplace/datasets/${datasetId}/info`);
+                const response = await fetch(`${API_BASE_URL}/marketplace/datasets/${datasetId}/info`);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw data;
+                }
+                
+                attributeTypes = data.queryable_attributes || {};
+                console.log('[DEBUG] Loaded attributeTypes:', attributeTypes);
+                
+                // Load unique values and min/max
+                const valResp = await fetch(`${API_BASE_URL}/marketplace/datasets/${datasetId}/attribute-values`);
+                const valData = await valResp.json();
+                
+                if (valResp.ok) {
+                    attributeUniqueValues = valData.unique_values || {};
+                    attributeMinMax = valData.min_max || {};
+                    console.log('[DEBUG] Loaded attributeUniqueValues:', attributeUniqueValues);
+                }
+
+                if (Object.keys(attributeTypes).length === 0) {
+                    attributeSelectionHelper.innerHTML = '<p class="text-xs text-red-500 italic p-2">No queryable attributes found for this dataset.</p>';
+                } else {
+                    const infoP = document.createElement('p');
+                    infoP.className = 'text-xs text-gray-600 mb-2';
+                    infoP.innerHTML = `Queryable attributes for dataset <strong>"${data.name || 'N/A'}"</strong>:`;
+                    attributeSelectionHelper.appendChild(infoP);
+
+                    const attrList = document.createElement('ul');
+                    attrList.className = 'list-disc list-inside grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2';
+                    for (const attrName in attributeTypes) {
+                        const attrType = attributeTypes[attrName];
+                        const li = document.createElement('li');
+                        li.textContent = `${attrName} (${attrType})`;
+                        attrList.appendChild(li);
+                    }
+                    attributeSelectionHelper.appendChild(attrList);
+                }
+                // Always set all attributes as selected
+                selectedAttributesInput.value = Object.keys(attributeTypes).join(',');
+                renderFilters();
+
+            } catch (error) {
+                console.error(`[DEBUG] Error in loadAttributesForDataset (catch block) for ${datasetId}:`, error);
+                const displayError = error.error ? error : { error: (error.message || 'Failed to fetch attributes.') };
+                attributeSelectionHelper.innerHTML = `<p class="text-xs text-red-500 italic p-2">⚠️ Error loading attributes: ${displayError.error}</p>`;
+            } finally {
+                console.log("[DEBUG] loadAttributesForDataset() finally block executing.");
+                hideLoading();
+            }
+        }
+
+        function updateSelectedAttributesFromCheckboxes() {
+            const selectedCheckboxes = document.querySelectorAll('#attributeSelectionHelper input[name="query_attr_checkbox"]:checked');
+            const selectedValues = Array.from(selectedCheckboxes).map(cb => cb.value);
+            selectedAttributesInput.value = selectedValues.join(',');
+            console.log("[DEBUG] updateSelectedAttributesFromCheckboxes - selected: ", selectedAttributesInput.value);
+        }
+
+        // Consumer Query Price Form Submission
+        const queryPriceForm = document.getElementById('queryPriceForm');
+        if (queryPriceForm) {
+            queryPriceForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                console.log("[DEBUG] Query price form submitted.");
+                showLoading();
+                const priceResponsePre = document.getElementById('priceResponseArea').querySelector('pre');
+                priceResponsePre.textContent = 'Getting price offer...';
+                document.getElementById('priceResponseAreaWrapper')?.classList.remove('hidden');
+
+                const datasetId = datasetIdForQueryInput.value;
+                const attributesString = selectedAttributesInput.value;
+                const selectedAttributes = attributesString ? attributesString.split(',').map(attr => attr.trim()).filter(attr => attr) : [];
+
+                if (!datasetId) {
+                    displayResponse('priceResponseArea', { error: "Please select a dataset first." }, true, 'priceResponseAreaWrapper');
+                    hideLoading();
+                    return;
+                }
+                if (selectedAttributes.length === 0) {
+                    // Remove this check, allow proceeding with all attributes
+                    // displayResponse('priceResponseArea', { error: "Please select at least one attribute for the query." }, true, 'priceResponseAreaWrapper');
+                    // hideLoading();
+                    // return;
+                }
+
+                const numValuesKInput = document.getElementById('numValuesK');
+                const epsilonQueryInput = document.getElementById('epsilonQuery');
+
+                if (!numValuesKInput.checkValidity() || !epsilonQueryInput.checkValidity()) {
+                    displayResponse('priceResponseArea', { error: "Please enter valid values for K and Epsilon according to constraints." }, true, 'priceResponseAreaWrapper');
+                    numValuesKInput.reportValidity();
+                    epsilonQueryInput.reportValidity();
+                    hideLoading();
+                    return;
+                }
+
+                // Build filters payload
+                const activeFilters = Object.entries(filters)
+                    .filter(([attr, value]) => value !== '')
+                    .map(([attr, value]) => ({ attr, op: '==', value }));
+                console.log('[DEBUG] Active filters:', activeFilters);
+
+                const payload = {
+                    selected_attributes: selectedAttributes,
+                    num_values_per_attribute: parseInt(numValuesKInput.value),
+                    epsilon: parseFloat(epsilonQueryInput.value),
+                    filters: activeFilters
+                };
+                console.log("[DEBUG] Query price payload:", payload);
+
+                try {
+                    console.log(`[DEBUG] Querying price for dataset ${datasetId}`);
+                    const response = await fetch(`${API_BASE_URL}/marketplace/datasets/${datasetId}/query`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        console.error("[DEBUG] Query price error from API:", data);
+                        throw data;
+                    }
+                    console.log("[DEBUG] Query price success:", data);
+                    displayResponse('priceResponseArea', data, false, 'priceResponseAreaWrapper');
+                    if (data.query_id) {
+                        document.getElementById('queryIdForPurchase').value = data.query_id;
+                    }
+                } catch (error) {
+                    console.error('[DEBUG] Error getting price offer (catch block):', error);
+                    displayResponse('priceResponseArea', error, true, 'priceResponseAreaWrapper');
+                } finally {
+                    hideLoading();
+                }
+            });
+        } else {
+            console.error("[DEBUG] queryPriceForm element NOT found!");
+        }
+
+
+        // Consumer Purchase Form Submission
+        const purchaseForm = document.getElementById('purchaseForm');
+        if (purchaseForm) {
+            purchaseForm.addEventListener('submit', async function (event) {
+                event.preventDefault();
+                console.log("[DEBUG] Purchase form submitted.");
+                showLoading();
+                const purchaseResponsePre = document.getElementById('purchaseResponseArea').querySelector('pre');
+                purchaseResponsePre.textContent = 'Processing purchase...';
+                document.getElementById('purchaseResponseAreaWrapper')?.classList.remove('hidden');
+                document.getElementById('dataDisplayTableContainer').innerHTML = '';
+
+
+                const queryId = document.getElementById('queryIdForPurchase').value;
+                if (!queryId) {
+                    displayResponse('purchaseResponseArea', { error: "Query ID is missing. Please get a price offer first." }, true, 'purchaseResponseAreaWrapper');
+                    hideLoading();
+                    return;
+                }
+                const payload = { query_id: queryId };
+                console.log("[DEBUG] Purchase payload:", payload);
+
+                try {
+                    console.log("[DEBUG] Attempting purchase for query ID:", queryId);
+                    const response = await fetch(`${API_BASE_URL}/marketplace/purchase`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        console.error("[DEBUG] Purchase error from API:", data);
+                        throw data;
+                    }
+                    console.log("[DEBUG] Purchase success:", data);
+                    displayResponse('purchaseResponseArea', data, false, 'purchaseResponseAreaWrapper');
+                    if (data.data_response && data.data_response.data) {
+                        displayDataAsTable('dataDisplayTableContainer', data.data_response.privatized_data, data.data_response.privacy_note);
+                    } else if (data.message && data.data_response && data.data_response.error) {
+                        const tableContainer = document.getElementById('dataDisplayTableContainer');
+                        tableContainer.innerHTML = `<p class="italic text-orange-600 p-2">${data.message} Stored response shows error: ${data.data_response.error}</p>`;
+                        if (data.data_response.privacy_note) {
+                            tableContainer.innerHTML += `<p class="text-xs text-gray-500 mt-1 p-2">${data.data_response.privacy_note}</p>`;
+                        }
+                    }
+                    else {
+                        document.getElementById('dataDisplayTableContainer').innerHTML = '<p class="italic text-gray-500 p-2">No tabular data found in the purchase response to display.</p>';
+                    }
+                } catch (error) {
+                    console.error('[DEBUG] Error purchasing data (catch block):', error);
+                    displayResponse('purchaseResponseArea', error, true, 'purchaseResponseAreaWrapper');
+                } finally {
+                    hideLoading();
+                }
+            });
+        } else {
+            console.error("[DEBUG] purchaseForm element NOT found!");
+        }
+
+
+        // Initial page setup
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[DEBUG] DOMContentLoaded event fired.");
+            if (showProducerViewBtn) { // Check if button exists before clicking
+                showProducerViewBtn.click();
+            } else {
+                console.error("[DEBUG] showProducerViewBtn not found on DOMContentLoaded, cannot click to set default view.");
+            }
+            loadAttributesForDataset('');
+
+            document.getElementById('producerResponseAreaWrapper')?.classList.add('hidden');
+            document.getElementById('priceResponseAreaWrapper')?.classList.add('hidden');
+            document.getElementById('purchaseResponseAreaWrapper')?.classList.add('hidden');
+
+            document.querySelectorAll('pre').forEach(pre => pre.textContent = '');
+        });
+
+        // Filter functionality for main index.html
+        let attributeTypes = {};
+        let attributeUniqueValues = {};
+        let attributeMinMax = {};
+        let filters = [];
+
+        // Add filter button event listener
+        const addFilterBtn = document.getElementById('addFilterBtn');
+        if (addFilterBtn) {
+            addFilterBtn.addEventListener('click', addFilter);
+        }
+
+        function addFilter() {
+            console.log('[DEBUG] addFilter() called');
+            filters.push({ attr: '', op: '', value: '' });
+            renderFilters();
+        }
+
+        function renderFilters() {
+            console.log('[DEBUG] renderFilters() called');
+            const container = document.getElementById('filtersContainer');
+            if (!container) {
+                console.error('[DEBUG] filtersContainer not found!');
+                return;
+            }
+            container.innerHTML = '';
+            if (Object.keys(attributeTypes).length === 0) {
+                console.log('[DEBUG] No attribute types available');
+                return;
+            }
+            // For each attribute, render a dropdown of unique values
+            Object.keys(attributeTypes).forEach(attr => {
+                const row = document.createElement('div');
+                row.className = 'filter-row flex items-center space-x-2 p-3 bg-gray-50 rounded-md mb-2';
+                const label = document.createElement('label');
+                label.textContent = `${attr} (${attributeTypes[attr]})`;
+                label.className = 'w-48';
+                row.appendChild(label);
+                const select = document.createElement('select');
+                select.className = 'px-2 py-1 border border-gray-300 rounded text-sm flex-1';
+                const defaultOption = document.createElement('option');
+                defaultOption.value = '';
+                defaultOption.textContent = 'No filter';
+                select.appendChild(defaultOption);
+                if (attributeUniqueValues[attr]) {
+                    attributeUniqueValues[attr].forEach(val => {
+                        const option = document.createElement('option');
+                        option.value = val;
+                        option.textContent = val;
+                        select.appendChild(option);
+                    });
+                }
+                select.value = filters[attr] || '';
+                select.onchange = (e) => {
+                    filters[attr] = e.target.value;
+                };
+                row.appendChild(select);
+                container.appendChild(row);
+            });
+        }
+
+        // Reports button functionality
+        const showReportsBtn = document.getElementById('showReportsBtn');
+        if (showReportsBtn) {
+            showReportsBtn.addEventListener('click', () => {
+                window.open('/reports', '_blank');
+            });
+        }
+    </script>
+</body>
+
+</html>
